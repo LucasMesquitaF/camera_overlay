@@ -1,5 +1,5 @@
 import 'package:sipam_foto/database/create.dart';
-import 'package:sipam_foto/database/util/querys.dart';
+import 'package:sipam_foto/database/util/queries.dart';
 import '../missoes/update.dart';
 
 class FotoMissao {

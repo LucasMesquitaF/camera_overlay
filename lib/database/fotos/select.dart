@@ -3,7 +3,7 @@ import 'package:sipam_foto/database/util/filtrar.dart';
 import 'package:sipam_foto/model/filtro.dart';
 import 'package:sipam_foto/model/foto.dart';
 
-class Selects {
+class Select {
   static Future<List<Foto>> todasFotos() async {
     final db = await Create.database;
     final result = await db.query('fotos', orderBy: 'data_criacao');
