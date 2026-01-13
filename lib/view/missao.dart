@@ -1,54 +1,100 @@
 import 'package:flutter/material.dart';
-import 'package:sipam_foto/database/missoes/select.dart';
-import 'package:sipam_foto/database/missoes/update.dart';
+import 'package:sipam_foto/database/missoes/insert.dart' as insert;
+import 'package:sipam_foto/database/missoes/select.dart' as select;
 import 'package:sipam_foto/model/missao.dart' as model;
-import 'package:sipam_foto/view/camera.dart';
 
 class Missao extends StatefulWidget {
   const Missao({super.key});
+
   @override
   State<Missao> createState() => _MissaoState();
 }
 
 class _MissaoState extends State<Missao> {
-  List<model.Missao> missoes = [];
-  bool loading = true;
+  late Future<List<model.Missao>> missoesFuture;
 
   @override
   void initState() {
     super.initState();
-    carregarMissoes();
+    _reloadMissoes();
   }
 
-  Future<void> carregarMissoes() async {
-    missoes = await Select.todasMissoes();
-    loading = false;
-    setState(() {});
+  void _reloadMissoes() {
+    missoesFuture = select.Select.todasMissoes();
   }
 
-  Future<void> missaoAtivada(model.Missao missao) async {
-    await Update.ativar(missao);
-    await carregarMissoes();
-  }
+  void _openModal() {
+    final c = context;
+    final textC = TextEditingController();
+    bool ativarAgora = true;
 
-  Future<void> abrirCamera(model.Missao missao) async {
-    await missaoAtivada(missao);
-    if (!mounted) return;
-    await Navigator.push(context, MaterialPageRoute(builder: (_) => Camera()));
-    await carregarMissoes();
-  }
-
-  void abrirModalCriarMissao() {
     showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) {
-        return _ModalCriarMissao(
-          onSalvar: (nome, ativarAgora) async {
-            // depois a gente implementa
-            Navigator.pop(context);
-            await carregarMissoes();
-          },
+      context: c,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Nova missão'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: textC,
+                autofocus: true,
+                decoration: const InputDecoration(hintText: 'Nome da missão'),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  const Text('Ativar agora?'),
+                  const Spacer(),
+                  StatefulBuilder(
+                    builder: (_, setLocalState) {
+                      return Switch(
+                        value: ativarAgora,
+                        onChanged: (value) {
+                          setLocalState(() {
+                            ativarAgora = value;
+                          });
+                        },
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Cancelar'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                final nome = textC.text.trim();
+                if (nome.isEmpty) return;
+                final existe = await select.Select.existeMissao(nome);
+                if (!c.mounted) return;
+                if (existe) {
+                  ScaffoldMessenger.of(c).showSnackBar(
+                    const SnackBar(
+                      content: Text('Já Existe uma missão com esse nome'),
+                    ),
+                  );
+                  return;
+                }
+                await insert.Insert.missao(nome: nome, ativa: ativarAgora);
+                if (!c.mounted) return;
+                Navigator.pop(c);
+                if (ativarAgora) {
+                  Navigator.pop(c, true);
+                } else {
+                  setState(() {
+                    _reloadMissoes();
+                  });
+                }
+              },
+              child: const Text('Criar'),
+            ),
+          ],
         );
       },
     );
@@ -56,81 +102,36 @@ class _MissaoState extends State<Missao> {
 
   @override
   Widget build(BuildContext context) {
+    final c = context;
     return Scaffold(
       appBar: AppBar(title: const Text('Missões')),
-
+      body: FutureBuilder<List<model.Missao>>(
+        future: missoesFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError) {
+            return Center(child: Text('Erro: ${snapshot.error}'));
+          }
+          final missoes = snapshot.data ?? [];
+          if (missoes.isEmpty) {
+            return const Center(child: Text('Nenhuma missão criada'));
+          }
+          return ListView.builder(
+            padding: const EdgeInsets.all(8),
+            itemCount: missoes.length,
+            itemBuilder: (c, index) {
+              final missao = missoes[index];
+              // return MissaoTile()
+            },
+          );
+        },
+      ),
       floatingActionButton: FloatingActionButton(
-        onPressed: abrirModalCriarMissao,
+        onPressed: _openModal,
         child: const Icon(Icons.add),
       ),
-
-      body: loading
-          ? const Center(child: CircularProgressIndicator())
-          : ListView.builder(
-              itemCount: missoes.length,
-              itemBuilder: (context, index) {
-                final missao = missoes[index];
-
-                return ListTile(
-                  title: Text(missao.nome),
-                  subtitle: missao.ativa
-                      ? const Text(
-                          'Missão ativa',
-                          style: TextStyle(color: Colors.green),
-                        )
-                      : null,
-                  trailing: const Icon(Icons.camera_alt),
-                  onTap: () => abrirCamera(missao),
-                );
-              },
-            ),
-    );
-  }
-}
-
-class _ModalCriarMissao extends StatefulWidget {
-  final void Function(String nome, bool ativarAgora) onSalvar;
-
-  const _ModalCriarMissao({required this.onSalvar});
-
-  @override
-  State<_ModalCriarMissao> createState() => _ModalCriarMissaoState();
-}
-
-class _ModalCriarMissaoState extends State<_ModalCriarMissao> {
-  final nomeCtrl = TextEditingController();
-  bool ativarAgora = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Nova missão'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          TextField(
-            controller: nomeCtrl,
-            decoration: const InputDecoration(labelText: 'Nome da missão'),
-          ),
-          CheckboxListTile(
-            title: const Text('Ativar agora'),
-            value: ativarAgora,
-            onChanged: (v) => setState(() => ativarAgora = v ?? false),
-          ),
-        ],
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Cancelar'),
-        ),
-        ElevatedButton(
-          onPressed: () {
-            widget.onSalvar(nomeCtrl.text, ativarAgora);
-          },
-          child: const Text('Salvar'),
-        ),
-      ],
     );
   }
 }
