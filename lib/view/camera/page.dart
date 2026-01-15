@@ -1,10 +1,12 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:sipam_foto/view/camera/enum.dart';
-
+import 'package:sipam_foto/view/camera/widget/preview.dart' as widgets;
+import 'package:sipam_foto/view/camera/widget/bottom_bar.dart' as widgets;
 import 'package:sipam_foto/view/camera/permissoes.dart' as permissao;
-
 import 'package:sipam_foto/view/missao/missao.dart' as page;
 import 'package:sipam_foto/database/missoes/select.dart' as select;
 
@@ -20,6 +22,9 @@ class _CameraState extends State<Camera> {
   CameraController? _controller;
   List<CameraDescription>? _cameras;
   String? _erro;
+  File? _ultimaFoto;
+  bool _abrirMaps = false;
+  static const double height = widgets.BottomBar.height;
 
   @override
   void initState() {
@@ -31,6 +36,14 @@ class _CameraState extends State<Camera> {
   void dispose() {
     _controller?.dispose();
     super.dispose();
+  }
+
+  void _onFoto() {
+    debugPrint('Botão foto pressionado');
+  }
+
+  void _onMaps() {
+    debugPrint('Abrir maps');
   }
 
   Future<void> _initFluxo() async {
@@ -142,7 +155,30 @@ class _CameraState extends State<Camera> {
   Widget _cameraPronta() {
     return Scaffold(
       appBar: AppBar(title: const Text('Câmera')),
-      body: CameraPreview(_controller!),
+      body: Stack(
+        children: [
+          Positioned.fill(
+            bottom: height,
+            child: widgets.Preview(
+              imageFile: null,
+              preview: CameraPreview(_controller!),
+              dados: '',
+              repaintKey: GlobalKey(),
+              lat: null,
+              lng: null,
+            ),
+          ),
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: widgets.BottomBar(
+              ultimaFoto: _ultimaFoto,
+              onFoto: _onFoto,
+              onMaps: _onMaps,
+              abrirMaps: _abrirMaps,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
