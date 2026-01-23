@@ -4,14 +4,14 @@ class Filtro {
   final DateTime? fim;
   final double? minimo;
   final double? maximo;
-  final bool? localizacao;
+  final int? missaoid;
   const Filtro({
     this.nome,
     this.inicio,
     this.fim,
     this.minimo,
     this.maximo,
-    this.localizacao,
+    this.missaoid,
   });
   // singleton para filtro vazio.
   static const Filtro empty = Filtro();
@@ -22,7 +22,7 @@ class Filtro {
         fim == null &&
         minimo == null &&
         maximo == null &&
-        localizacao == null;
+        missaoid == null;
   }
 
   Filtro copyWith({
@@ -31,7 +31,8 @@ class Filtro {
     DateTime? fim,
     double? minimo,
     double? maximo,
-    bool? localizacao,
+    int? missaoid,
+    bool limparMissao = false,
   }) {
     return Filtro(
       nome: nome ?? this.nome,
@@ -39,7 +40,7 @@ class Filtro {
       fim: fim ?? this.fim,
       minimo: minimo ?? this.minimo,
       maximo: maximo ?? this.maximo,
-      localizacao: localizacao ?? this.localizacao,
+      missaoid: limparMissao ? null : (missaoid ?? this.missaoid),
     );
   }
 }

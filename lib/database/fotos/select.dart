@@ -1,16 +1,17 @@
 import 'package:sipam_foto/database/create.dart';
 import 'package:sipam_foto/database/util/filtrar.dart';
-import 'package:sipam_foto/model/filtro.dart';
+import 'package:sipam_foto/model/filtro.dart' as model;
 import 'package:sipam_foto/model/foto.dart' as model;
+import 'package:sipam_foto/model/missao.dart' as model;
 
-class Foto {
+class Filtro {
   static Future<List<model.Foto>> todasFotos() async {
     final db = await Create.database;
     final result = await db.query('fotos', orderBy: 'data_criacao');
     return result.map((e) => model.Foto.fromMap(e)).toList();
   }
 
-  static Future<List<model.Foto>> fotoMissao(int missaoid) async {
+  static Future<List<model.Foto>> missao(int missaoid) async {
     final db = await Create.database;
     final result = await db.query(
       'fotos',
@@ -21,22 +22,30 @@ class Foto {
     return result.map((e) => model.Foto.fromMap(e)).toList();
   }
 
-  static Future<List<model.Foto>> fotoFiltro(Filtro filtro) async {
+  static Future<List<model.Foto>> fotoFiltro(model.Filtro filtro) async {
     // FILTRO POR...
     final db = await Create.database;
     final where = <String>[];
     final args = <Object>[];
+
+    filtrar(where, args, 'missao_id = ?', filtro.missaoid);
+
     // NOME
     filtrar(
       where,
       args,
       'LOWER(nome) LIKE ?',
       filtro.nome?.isNotEmpty == true
-          ? '%&{filtro.nome!.toLowerCase()}%'
+          ? '%${filtro.nome!.toLowerCase()}%'
           : null,
     );
     // DATA INICIAL
-    filtrar(where, args, 'data_criacao', filtro.inicio?.millisecondsSinceEpoch);
+    filtrar(
+      where,
+      args,
+      'data_criacao >= ?',
+      filtro.inicio?.millisecondsSinceEpoch,
+    );
     // DATA FINAL
     if (filtro.fim != null) {
       final diaTotal = DateTime(

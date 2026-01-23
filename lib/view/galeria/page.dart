@@ -3,8 +3,10 @@ import 'package:sipam_foto/view/galeria/foto.dart' as photo_view;
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:sipam_foto/model/foto.dart' as model;
+import 'package:sipam_foto/model/filtro.dart' as model;
 import 'package:sipam_foto/database/fotos/select.dart' as select;
 import 'package:sipam_foto/view/galeria/thumbnail.dart';
+import 'package:sipam_foto/view/galeria/modal.dart' as modal;
 
 class Galeria extends StatefulWidget {
   const Galeria({super.key});
@@ -16,6 +18,7 @@ class _GaleriaState extends State<Galeria> {
   bool loading = true;
   List<model.Foto> fotos = [];
   Map<String, AssetEntity> assets = {};
+  model.Filtro filtroAtual = model.Filtro.empty;
 
   @override
   void initState() {
@@ -35,7 +38,7 @@ class _GaleriaState extends State<Galeria> {
     await PhotoManager.clearFileCache();
     await PhotoManager.releaseCache();
 
-    fotos = await select.Foto.todasFotos();
+    fotos = await select.Filtro.fotoFiltro(filtroAtual);
     final ids = fotos.map((f) => f.assetId).toList();
     final Map<String, AssetEntity> temp = {};
     for (final id in ids) {
@@ -55,7 +58,21 @@ class _GaleriaState extends State<Galeria> {
       appBar: AppBar(
         title: const Text('Galeria'),
         actions: [
-          IconButton(icon: const Icon(Icons.filter_alt), onPressed: () {}),
+          IconButton(
+            icon: const Icon(Icons.filter_alt),
+            onPressed: () async {
+              final resultado = await showModalBottomSheet(
+                backgroundColor: const Color.fromARGB(255, 25, 35, 55),
+                context: context,
+                isScrollControlled: true,
+                builder: (_) => modal.Filtros(filtro: filtroAtual),
+              );
+              if (resultado != null) {
+                filtroAtual = resultado;
+                carregarGaleria();
+              }
+            },
+          ),
         ],
       ),
       body: _buildBody(),
