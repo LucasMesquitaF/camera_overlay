@@ -27,7 +27,11 @@ class Filtro {
     final db = await Create.database;
     final where = <String>[];
     final args = <Object>[];
+    if (filtro.isEmpty) {
+      return todasFotos();
+    }
 
+    // MISSÃO
     filtrar(where, args, 'missao_id = ?', filtro.missaoid);
 
     // NOME

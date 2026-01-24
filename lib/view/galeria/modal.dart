@@ -100,11 +100,13 @@ class _FiltrosState extends State<Filtros> {
             onChanged: (v) {
               if (v == -1) {
                 setState(() {
-                  filtro = filtro.copyWith(missaoid: null);
+                  filtro = filtro.copyWith(missaoid: null, limparMissao: true);
+                  debugPrint('Missao id ESTA null mesmo!');
                 });
               } else {
                 setState(() {
                   filtro = filtro.copyWith(missaoid: v);
+                  debugPrint('Missao id NAO esta null');
                 });
               }
             },
