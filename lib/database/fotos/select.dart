@@ -2,7 +2,6 @@ import 'package:sipam_foto/database/create.dart';
 import 'package:sipam_foto/database/util/filtrar.dart';
 import 'package:sipam_foto/model/filtro.dart' as model;
 import 'package:sipam_foto/model/foto.dart' as model;
-import 'package:sipam_foto/model/missao.dart' as model;
 
 class Filtro {
   static Future<List<model.Foto>> todasFotos() async {

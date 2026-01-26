@@ -39,6 +39,7 @@ class MyApp extends StatelessWidget {
             color: Colors.white70,
           ), // fundo do AlertDialog
         ),
+        dropdownMenuTheme: DropdownMenuThemeData(menuStyle: const MenuStyle()),
       ),
       home: const Missao(), // sua tela inicial
     );

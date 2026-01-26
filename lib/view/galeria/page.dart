@@ -53,7 +53,7 @@ class _GaleriaState extends State<Galeria> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext c) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Galeria'),
@@ -63,7 +63,7 @@ class _GaleriaState extends State<Galeria> {
             onPressed: () async {
               final resultado = await showModalBottomSheet(
                 backgroundColor: const Color.fromARGB(255, 25, 35, 55),
-                context: context,
+                context: c,
                 isScrollControlled: true,
                 builder: (_) => modal.Filtros(filtro: filtroAtual),
               );
@@ -98,20 +98,23 @@ class _GaleriaState extends State<Galeria> {
         mainAxisSpacing: 4,
         crossAxisSpacing: 4,
         itemCount: fotos.length,
-        itemBuilder: (context, index) {
+        itemBuilder: (c, index) {
           final foto = fotos[index];
           final asset = assets[foto.assetId];
           if (asset == null) {
             return const SizedBox.shrink();
           }
           return GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
+            onTap: () async {
+              final removida = await Navigator.push(
+                c,
                 MaterialPageRoute(
-                  builder: (_) => photo_view.Foto(asset: asset),
+                  builder: (_) => photo_view.Foto(asset: asset, foto: foto),
                 ),
               );
+              if (removida == true) {
+                carregarGaleria();
+              }
             },
             child: Thumbnail(asset: asset, foto: foto),
           );

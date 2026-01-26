@@ -33,9 +33,10 @@ class Filtro {
     double? maximo,
     int? missaoid,
     bool limparMissao = false,
+    bool limparNome = false,
   }) {
     return Filtro(
-      nome: nome ?? this.nome,
+      nome: limparNome ? null : (nome ?? this.nome),
       inicio: inicio ?? this.inicio,
       fim: fim ?? this.fim,
       minimo: minimo ?? this.minimo,

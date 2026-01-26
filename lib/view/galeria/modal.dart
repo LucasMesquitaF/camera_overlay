@@ -19,7 +19,6 @@ class _FiltrosState extends State<Filtros> {
   double _min = 0;
   double _max = 2000;
   RangeValues _altitudeRange = const RangeValues(0, 2000);
-  int? _missaoid;
   List<model.Missao> missoes = [];
   bool loadingMissoes = true;
 
@@ -58,6 +57,7 @@ class _FiltrosState extends State<Filtros> {
         bottom: MediaQuery.of(c).viewInsets.bottom + 16,
       ),
       child: Column(
+        spacing: 3,
         mainAxisSize: MainAxisSize.min,
         children: [
           const Text(
@@ -71,7 +71,11 @@ class _FiltrosState extends State<Filtros> {
             controller: _nomeController,
             onChanged: (v) {
               final texto = v.trim().toLowerCase();
-              filtro = filtro.copyWith(nome: texto.isEmpty ? null : texto);
+              if (texto.isEmpty) {
+                filtro = filtro.copyWith(limparNome: true);
+              } else {
+                filtro = filtro.copyWith(nome: texto);
+              }
             },
           ),
           const SizedBox(height: 12),
@@ -79,11 +83,13 @@ class _FiltrosState extends State<Filtros> {
           DropdownButtonFormField<int>(
             key: ValueKey(filtro.missaoid ?? -1),
             initialValue: filtro.missaoid ?? -1,
+            style: TextStyle(color: Colors.white),
+            dropdownColor: const Color.fromARGB(255, 40, 50, 70),
             isExpanded: true,
             decoration: InputDecoration(
               labelText: 'Missão',
-              filled: true,
-              fillColor: const Color.fromARGB(255, 40, 50, 70),
+              filled: false,
+
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
@@ -161,25 +167,33 @@ class _FiltrosState extends State<Filtros> {
               ),
             ],
           ),
+          InputDecorator(
+            decoration: const InputDecoration(
+              labelText: 'Altura (m)',
 
-          RangeSlider(
-            values: _altitudeRange,
-            min: _min,
-            max: _max,
-            divisions: 1000,
-            labels: RangeLabels(
-              '${_altitudeRange.start.round()}m',
-              '${_altitudeRange.end.round()}m',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.all(Radius.circular(8)),
+              ),
             ),
-            onChanged: (RangeValues values) {
-              setState(() {
-                _altitudeRange = values;
-                filtro = filtro.copyWith(
-                  minimo: values.start,
-                  maximo: values.end,
-                );
-              });
-            },
+            child: RangeSlider(
+              values: _altitudeRange,
+              min: _min,
+              max: _max,
+              divisions: 1000,
+              labels: RangeLabels(
+                '${_altitudeRange.start.round()}m',
+                '${_altitudeRange.end.round()}m',
+              ),
+              onChanged: (RangeValues values) {
+                setState(() {
+                  _altitudeRange = values;
+                  filtro = filtro.copyWith(
+                    minimo: values.start,
+                    maximo: values.end,
+                  );
+                });
+              },
+            ),
           ),
           Row(
             children: [
