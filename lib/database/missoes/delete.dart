@@ -1,10 +1,10 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart'; // Para debugPrint
 import 'package:sipam_foto/database/create.dart';
-import 'package:sipam_foto/model/missao.dart';
+import 'package:sipam_foto/model/missao.dart' as model;
 
-class Delete {
-  static Future<void> missao(Missao missao) async {
+class Missao {
+  static Future<void> missao(model.Missao missao) async {
     DebugPrintCallback debugPrint = debugPrintThrottled;
     final db = await Create.database;
     if (missao.ativa) {

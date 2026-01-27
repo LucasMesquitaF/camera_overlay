@@ -1,7 +1,7 @@
 import '../create.dart';
 
-class Insert {
-  static Future<void> foto({
+class Foto {
+  static Future<void> values({
     required int missaoid,
     required String nome,
     required String asset_id,

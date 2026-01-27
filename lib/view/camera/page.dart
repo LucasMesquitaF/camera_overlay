@@ -138,7 +138,7 @@ class _CameraState extends State<Camera> {
         relativePath: 'Pictures/$albumNome',
       );
       if (asset != null) {
-        await insert.Insert.foto(
+        await insert.Foto.values(
           missaoid: missao.id,
           nome: arquivoNome,
           asset_id: asset.id,
