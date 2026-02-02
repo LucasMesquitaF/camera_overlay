@@ -133,7 +133,7 @@ class _CameraState extends State<CameraOverlay> {
           _repaintKey.currentContext!.findRenderObject()
               as RenderRepaintBoundary;
 
-      final image = await boundary.toImage(pixelRatio: 3);
+      final image = await boundary.toImage(pixelRatio: 4);
       final byteData = await image.toByteData(format: ImageByteFormat.png);
       final pngBytes = byteData!.buffer.asUint8List();
 
@@ -239,7 +239,7 @@ class _CameraState extends State<CameraOverlay> {
     }
     _controller = CameraController(
       _cameras!.first,
-      ResolutionPreset.high,
+      ResolutionPreset.veryHigh,
       enableAudio: false,
     );
     await _controller!.initialize();
