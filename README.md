@@ -1,4 +1,4 @@
-# sipam_foto
+# camera modulo
 
 A new Flutter project.
 
