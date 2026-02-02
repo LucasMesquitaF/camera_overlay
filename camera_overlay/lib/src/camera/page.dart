@@ -1,48 +1,56 @@
 import 'dart:async';
 import 'dart:io' show Platform, File;
+import 'dart:typed_data';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:permission_handler/permission_handler.dart';
-import 'package:photo_manager/photo_manager.dart';
-import 'package:sipam_foto/database/localizacao/service.dart';
 
-import 'package:sipam_foto/view/camera/enum.dart';
+import 'enum.dart';
+
+// IMPORT service
+import 'service/localizacao.dart' as service;
 
 import 'package:http/http.dart' as http;
 
 //IMPORT model
-import 'package:sipam_foto/model/missao.dart' as model;
-import 'package:sipam_foto/model/localizacao.dart' as model;
+
+import 'model/localizacao.dart' as model;
 
 // IMPORT cases
-import 'package:sipam_foto/view/camera/cases/loading.dart' as cases;
-import 'package:sipam_foto/view/camera/cases/permissao_negada.dart' as cases;
-import 'package:sipam_foto/view/camera/cases/sem_missao.dart' as cases;
-import 'package:sipam_foto/view/camera/cases/camera_pronta.dart' as cases;
-import 'package:sipam_foto/view/camera/cases/erro.dart' as cases;
+import 'cases/loading.dart' as cases;
+import 'cases/permissao_negada.dart' as cases;
+import 'cases/camera_pronta.dart' as cases;
+import 'cases/erro.dart' as cases;
 
 // IMPORT widgets
-import 'package:sipam_foto/view/camera/widget/preview.dart' as widgets;
-import 'package:sipam_foto/view/camera/widget/bottom_bar.dart' as widgets;
+import 'widget/preview.dart' as widgets;
+import 'widget/bottom_bar.dart' as widgets;
 
-import 'package:sipam_foto/view/camera/permissoes.dart' as permissao;
-import 'package:sipam_foto/view/missao/missao.dart' as page;
+import 'permissoes.dart' as permissao;
 
-// IMPORT database
-import 'package:sipam_foto/database/missoes/update.dart' as update;
-import 'package:sipam_foto/database/missoes/select.dart' as select;
-import 'package:sipam_foto/database/fotos/insert.dart' as insert;
-
-class Camera extends StatefulWidget {
-  const Camera({super.key});
+class CameraOverlay extends StatefulWidget {
+  final bool temBotaoGoogleMaps;
+  final bool temBotaoGaleria;
+  final bool temMiniMapa;
+  final VoidCallback? onAbrirGaleria;
+  final Future<void> Function(Uint8List bytes, model.Localizacao? localizacao)
+  onFotoFinal;
+  const CameraOverlay({
+    super.key,
+    required this.temBotaoGoogleMaps,
+    required this.temBotaoGaleria,
+    required this.temMiniMapa,
+    required this.onFotoFinal,
+    this.onAbrirGaleria,
+  });
   @override
-  State<Camera> createState() => _CameraState();
+  State<CameraOverlay> createState() => _CameraState();
 }
 
-class _CameraState extends State<Camera> {
+class _CameraState extends State<CameraOverlay> {
   CameraStatus _state = CameraStatus.loading;
 
   CameraController? _controller;
@@ -60,11 +68,19 @@ class _CameraState extends State<Camera> {
   @override
   void initState() {
     super.initState();
+    SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     _initFluxo();
   }
 
   @override
   void dispose() {
+    // libera orientação ao sair da câmera
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+    ]);
     sub.cancel();
     _controller?.dispose();
     super.dispose();
@@ -113,11 +129,6 @@ class _CameraState extends State<Camera> {
 
   Future<void> salvarFotoFinal() async {
     try {
-      final missao = await select.Missao.missaoAtiva();
-      if (missao == null) {
-        throw Exception('Nenhuma missão ativa, foto não foi salva');
-      }
-
       final boundary =
           _repaintKey.currentContext!.findRenderObject()
               as RenderRepaintBoundary;
@@ -126,35 +137,12 @@ class _CameraState extends State<Camera> {
       final byteData = await image.toByteData(format: ImageByteFormat.png);
       final pngBytes = byteData!.buffer.asUint8List();
 
-      final albumNome = 'Sipam-${missao.nome}';
-      final num = missao.contador + 1;
-      final contadorAtual = num.toString().padLeft(2, '0');
-      final arquivoNome = '${missao.nome}_$contadorAtual';
-
-      final AssetEntity? asset = await PhotoManager.editor.saveImage(
-        pngBytes,
-        filename: '$arquivoNome.png',
-        title: arquivoNome,
-        relativePath: 'Pictures/$albumNome',
-      );
-      if (asset != null) {
-        await insert.Foto.values(
-          missaoid: missao.id,
-          nome: arquivoNome,
-          asset_id: asset.id,
-          latitude: localizacaoAtual?.latitude,
-          longitude: localizacaoAtual?.longitude,
-          altitude: localizacaoAtual?.altitude,
-        );
-        debugPrint('Foto salva no banco de dados');
-      }
-      debugPrint('Tirando foto = $_tirandoFoto');
+      await widget.onFotoFinal(pngBytes, localizacaoAtual);
 
       if (_fotoTemporaria != null && await _fotoTemporaria!.exists()) {
         await _fotoTemporaria!.delete();
         debugPrint('Foto temporaria deletada');
       }
-      await update.Missao.contador();
       setState(() {
         _fotoTemporaria = null;
       });
@@ -214,13 +202,6 @@ class _CameraState extends State<Camera> {
 
   Future<void> _initFluxo() async {
     try {
-      final missao = await select.Missao.missaoAtiva();
-      if (missao == null) {
-        _setState(CameraStatus.semMissao);
-        debugPrint('sem missao ativa');
-        return;
-      }
-      debugPrint('Missao ativa vmao ver a permissao');
       final permitido = await permissao.requestAllPermissions();
       if (!permitido) {
         _setState(CameraStatus.permissaoNegada);
@@ -231,7 +212,7 @@ class _CameraState extends State<Camera> {
       await _initCamera();
 
       _setState(CameraStatus.pronta);
-      sub = emTempoReal().listen((loc) {
+      sub = service.emTempoReal().listen((loc) {
         setState(() {
           localizacaoAtual = loc;
         });
@@ -265,18 +246,13 @@ class _CameraState extends State<Camera> {
   }
 
   @override
-  Widget build(BuildContext c) {
+  Widget build(BuildContext context) {
     debugPrint('>>> BUILD CAMERA PAGE <<<');
     switch (_state) {
       case CameraStatus.loading:
         return cases.loading();
-      case CameraStatus.semMissao:
-        return cases.SemMissao(
-          onSetState: getSetState,
-          onInitFluxo: getInitFluxo,
-        );
       case CameraStatus.permissaoNegada:
-        return cases.permissaoNegada(c);
+        return cases.permissaoNegada(context);
       case CameraStatus.inicializandoCamera:
         return cases.loading(texto: 'Inicializando câmera...');
       case CameraStatus.pronta:
@@ -286,6 +262,9 @@ class _CameraState extends State<Camera> {
             final podeAbrir = snapshot.data ?? false;
 
             return cases.cameraPronta(
+              temBotaoGoogleMaps: widget.temBotaoGoogleMaps,
+              temMiniMapa: widget.temMiniMapa,
+              temBotaoGaleria: widget.temBotaoGaleria,
               tirandoFoto: _tirandoFoto,
               feedback: feedback,
               fotoTemporaria: _fotoTemporaria,
@@ -293,6 +272,7 @@ class _CameraState extends State<Camera> {
               repaintKey: _repaintKey,
               onFoto: _onFoto,
               onMaps: _onMaps,
+              onAbrirGaleria: widget.onAbrirGaleria,
               podeAbrirMaps: podeAbrir,
               localizacaoAtual: localizacaoAtual,
             );

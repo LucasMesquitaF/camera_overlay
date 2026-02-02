@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-Widget permissaoNegada(BuildContext c) {
+Widget permissaoNegada(BuildContext context) {
   return Scaffold(
     appBar: AppBar(title: const Text('Permissão necessária')),
     body: Center(

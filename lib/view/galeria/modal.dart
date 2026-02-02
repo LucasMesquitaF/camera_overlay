@@ -45,7 +45,7 @@ class _FiltrosState extends State<Filtros> {
   }
 
   @override
-  Widget build(BuildContext c) {
+  Widget build(BuildContext context) {
     if (loadingMissoes) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -54,7 +54,7 @@ class _FiltrosState extends State<Filtros> {
         left: 16,
         right: 16,
         top: 16,
-        bottom: MediaQuery.of(c).viewInsets.bottom + 16,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 16,
       ),
       child: Column(
         spacing: 3,
@@ -124,7 +124,7 @@ class _FiltrosState extends State<Filtros> {
                 child: OutlinedButton(
                   onPressed: () async {
                     _inicio = await showDatePicker(
-                      context: c,
+                      context: context,
                       initialDate: filtro.inicio ?? DateTime.now(),
                       firstDate: DateTime(2000),
                       lastDate: DateTime.now(),
@@ -147,7 +147,7 @@ class _FiltrosState extends State<Filtros> {
                 child: OutlinedButton(
                   onPressed: () async {
                     _fim = await showDatePicker(
-                      context: c,
+                      context: context,
                       initialDate: filtro.fim ?? DateTime.now(),
                       firstDate: filtro.inicio ?? DateTime(2000),
                       lastDate: DateTime.now(),
@@ -200,7 +200,7 @@ class _FiltrosState extends State<Filtros> {
               Expanded(
                 child: OutlinedButton(
                   onPressed: () {
-                    Navigator.pop(c, model.Filtro.empty);
+                    Navigator.pop(context, model.Filtro.empty);
                   },
                   child: const Text('Limpar'),
                 ),
@@ -209,7 +209,7 @@ class _FiltrosState extends State<Filtros> {
               Expanded(
                 child: ElevatedButton(
                   onPressed: () {
-                    Navigator.pop(c, filtro);
+                    Navigator.pop(context, filtro);
                   },
                   child: const Text('Aplicar'),
                 ),

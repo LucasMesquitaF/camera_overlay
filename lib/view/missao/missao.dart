@@ -1,10 +1,17 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
+import 'package:camera_overlay/camera_overlay.dart' as cam;
+import 'package:photo_manager/photo_manager.dart';
+import 'package:sipam_foto/database/juntos/foto_missao.dart';
+import 'package:sipam_foto/model/localizacao.dart' as model;
+import 'package:sipam_foto/database/fotos/insert.dart' as insert;
 import 'package:sipam_foto/database/missoes/update.dart' as update;
 import 'package:sipam_foto/database/missoes/insert.dart' as insert;
 import 'package:sipam_foto/database/missoes/select.dart' as select;
 import 'package:sipam_foto/model/missao.dart' as model;
-import 'package:sipam_foto/view/camera/page.dart' as page;
 import 'package:sipam_foto/view/missao/lista.dart';
+import 'package:sipam_foto/view/galeria/page.dart' as page;
 
 class Missao extends StatefulWidget {
   const Missao({super.key});
@@ -24,6 +31,32 @@ class _MissaoState extends State<Missao> {
 
   void _reloadMissoes() {
     missoesFuture = select.Missao.todasMissoes();
+  }
+
+  Future<void> salvarFotoDaMissao({
+    required Uint8List bytes,
+    model.Localizacao? localizacao,
+  }) async {
+    // salvar no álbum
+    final result = await FotoMissao.gerar();
+    final missao = await select.Missao.missaoAtiva();
+    final nomeAlbum = 'Sipam-${missao!.nome}';
+    final asset = await PhotoManager.editor.saveImage(
+      bytes,
+      filename: '${result.nomeArquivo}.png',
+      title: result.nomeArquivo,
+      relativePath: 'Pictures/$nomeAlbum',
+    );
+
+    // salvar no banco
+    await insert.Foto.values(
+      missaoid: result.missaoid,
+      nome: result.nomeArquivo,
+      asset_id: asset.id,
+      latitude: localizacao?.lat,
+      longitude: localizacao?.log,
+      altitude: localizacao?.alt,
+    );
   }
 
   void _openModal() {
@@ -90,7 +123,27 @@ class _MissaoState extends State<Missao> {
                 if (ativarAgora) {
                   Navigator.push(
                     c,
-                    MaterialPageRoute(builder: (_) => const page.Camera()),
+                    MaterialPageRoute(
+                      builder: (_) => cam.CameraOverlay(
+                        temBotaoGoogleMaps: false,
+                        temBotaoGaleria: false,
+                        temMiniMapa: false,
+                        onFotoFinal: (bytes, localizacao) async {
+                          final model.Missao? missaoAtiva =
+                              await select.Missao.missaoAtiva();
+                          if (missaoAtiva == null) return;
+                          if (localizacao == null) return;
+                          final locApp = model.Localizacao.fromCamera(
+                            localizacao,
+                          );
+
+                          await salvarFotoDaMissao(
+                            bytes: bytes,
+                            localizacao: locApp,
+                          );
+                        },
+                      ),
+                    ),
                   );
                   setState(() {
                     _reloadMissoes();
@@ -138,8 +191,33 @@ class _MissaoState extends State<Missao> {
                   await update.Missao.ativar(missao);
                   if (!c.mounted) return;
                   Navigator.push(
-                    c,
-                    MaterialPageRoute(builder: (_) => const page.Camera()),
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => cam.CameraOverlay(
+                        temBotaoGoogleMaps: true,
+                        temBotaoGaleria: true,
+                        temMiniMapa: true,
+                        onFotoFinal: (bytes, localizacao) async {
+                          if (localizacao == null) return;
+                          final locApp = model.Localizacao.fromCamera(
+                            localizacao,
+                          );
+                          await salvarFotoDaMissao(
+                            bytes: bytes,
+                            localizacao: locApp,
+                          );
+                        },
+                        onAbrirGaleria: () async {
+                          debugPrint('botao galeria clicado');
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const page.Galeria(),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
                   );
                   setState(() {
                     _reloadMissoes();

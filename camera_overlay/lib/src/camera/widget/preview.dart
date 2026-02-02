@@ -1,10 +1,11 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 // importe seus widgets reais:
-import 'package:sipam_foto/view/camera/widget/mini_mapa.dart' as widgets;
-import 'package:sipam_foto/view/camera/widget/overlay.dart' as widgets;
+import 'mini_mapa.dart' as widgets;
+import 'overlay.dart' as widgets;
 
 class Preview extends StatelessWidget {
+  final bool temMiniMapa;
   final File? imageFile;
   final Widget preview;
   final String dados;
@@ -20,6 +21,7 @@ class Preview extends StatelessWidget {
     required this.repaintKey,
     this.lat,
     this.lng,
+    required this.temMiniMapa,
   });
 
   @override
@@ -33,7 +35,11 @@ class Preview extends StatelessWidget {
             Positioned(
               top: 10,
               right: 10,
-              child: widgets.MiniMap(lat: lat!, lng: lng!),
+              child: widgets.MiniMap(
+                temMiniMapa: temMiniMapa,
+                lat: lat!,
+                lng: lng!,
+              ),
             ),
           Positioned(left: 1, bottom: 1, child: widgets.Overlay(dados: dados)),
         ],

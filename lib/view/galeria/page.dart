@@ -53,7 +53,7 @@ class _GaleriaState extends State<Galeria> {
   }
 
   @override
-  Widget build(BuildContext c) {
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Galeria'),
@@ -63,7 +63,7 @@ class _GaleriaState extends State<Galeria> {
             onPressed: () async {
               final resultado = await showModalBottomSheet(
                 backgroundColor: const Color.fromARGB(255, 25, 35, 55),
-                context: c,
+                context: context,
                 isScrollControlled: true,
                 builder: (_) => modal.Filtros(filtro: filtroAtual),
               );

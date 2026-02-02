@@ -8,7 +8,6 @@ class Missao {
     final missao = await isAtiva(db);
     return model.Missao(
       id: missao['id'] as int,
-      contador: missao['contador'] as int,
       data: DateTime.fromMillisecondsSinceEpoch(missao['data_criacao'] as int),
       nome: missao['nome'] as String,
       ativa: true,
@@ -21,7 +20,6 @@ class Missao {
     return result.map((e) {
       return model.Missao(
         id: e['id'] as int,
-        contador: e['contador'] as int,
         data: DateTime.fromMillisecondsSinceEpoch(e['data_criacao'] as int),
         nome: e['nome'] as String,
         ativa: (e['ativa'] as int) == 1,
@@ -38,5 +36,21 @@ class Missao {
       limit: 1,
     );
     return result.isEmpty;
+  }
+
+  static Future<int> contadorAtual(int id) async {
+    final db = await Create.database;
+    final result = await db.query(
+      'missoes',
+      columns: ['contador'],
+      where: 'id = ?',
+      whereArgs: [id],
+      limit: 1,
+    );
+    if (result.isEmpty) {
+      throw Exception('Missão não encontrada');
+    }
+
+    return result.first['contador'] as int;
   }
 }

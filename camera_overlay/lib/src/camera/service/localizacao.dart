@@ -1,5 +1,5 @@
 import 'package:geolocator/geolocator.dart';
-import 'package:sipam_foto/model/localizacao.dart' as model;
+import '../model/localizacao.dart' as model;
 
 Stream<model.Localizacao> emTempoReal() {
   return Geolocator.getPositionStream(

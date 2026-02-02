@@ -10,7 +10,7 @@ class Foto extends StatelessWidget {
   const Foto({super.key, required this.asset, required this.foto});
 
   @override
-  Widget build(BuildContext c) {
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
@@ -18,8 +18,8 @@ class Foto extends StatelessWidget {
           IconButton(
             onPressed: () async {
               await delete.Foto.uma(foto);
-              if (c.mounted) {
-                Navigator.pop(c, true);
+              if (context.mounted) {
+                Navigator.pop(context, true);
               }
             },
             icon: const Icon(Icons.delete),

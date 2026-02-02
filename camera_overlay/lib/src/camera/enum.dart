@@ -1,6 +1,6 @@
 enum CameraStatus {
   loading,
-  semMissao,
+  // semMissao,
   permissaoNegada,
   inicializandoCamera,
   pronta,

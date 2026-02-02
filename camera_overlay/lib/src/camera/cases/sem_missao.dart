@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:sipam_foto/view/camera/enum.dart';
-import 'package:sipam_foto/view/missao/missao.dart' as page;
+import '../enum.dart';
 
 class SemMissao extends StatelessWidget {
   final void Function(CameraStatus) onSetState;
@@ -12,18 +11,14 @@ class SemMissao extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext c) {
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Câmera')),
       body: Center(
         child: ElevatedButton(
           onPressed: () async {
-            await Navigator.push(
-              c,
-              MaterialPageRoute(builder: (_) => const page.Missao()),
-            );
-            onSetState(CameraStatus.loading);
             onInitFluxo();
+            onSetState(CameraStatus.loading);
           },
           child: const Text('Ativar missão'),
         ),

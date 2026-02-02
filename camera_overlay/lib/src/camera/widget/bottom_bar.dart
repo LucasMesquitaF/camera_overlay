@@ -1,21 +1,25 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
-import 'package:sipam_foto/view/galeria/page.dart';
 
 class BottomBar extends StatelessWidget {
+  final bool temBotaoGoogleMaps;
+  final bool temBotaoGaleria;
   final File? fotoTemporaria;
   final bool tirandoFoto;
   final VoidCallback onFoto;
   final VoidCallback onMaps;
+  final VoidCallback? onAbrirGaleria;
   final bool abrirMaps;
   static const double height = 110;
   const BottomBar({
     super.key,
+    required this.temBotaoGoogleMaps,
+    required this.temBotaoGaleria,
     required this.fotoTemporaria,
     required this.onFoto,
     required this.onMaps,
     required this.abrirMaps,
+    required this.onAbrirGaleria,
     required this.tirandoFoto,
   });
 
@@ -33,29 +37,33 @@ class BottomBar extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           // Galeria
-          IconButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const Galeria()),
-              );
-            },
-            icon: fotoTemporaria == null
-                ? const Icon(
+          temBotaoGaleria
+              ? IconButton(
+                  onPressed: onAbrirGaleria,
+                  icon: fotoTemporaria == null
+                      ? const Icon(
+                          Icons.photo_library_outlined,
+                          color: Colors.white,
+                          size: 30,
+                        )
+                      : ClipRRect(
+                          borderRadius: BorderRadius.circular(6),
+                          child: Image.file(
+                            fotoTemporaria!,
+                            width: 36,
+                            height: 36,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                )
+              : IconButton(
+                  onPressed: null,
+                  icon: const Icon(
                     Icons.photo_library_outlined,
-                    color: Colors.white,
+                    color: Color.fromRGBO(1, 2, 3, 0),
                     size: 30,
-                  )
-                : ClipRRect(
-                    borderRadius: BorderRadius.circular(6),
-                    child: Image.file(
-                      fotoTemporaria!,
-                      width: 36,
-                      height: 36,
-                      fit: BoxFit.cover,
-                    ),
                   ),
-          ),
+                ),
 
           // Botao de tirar foto
           GestureDetector(
@@ -82,14 +90,23 @@ class BottomBar extends StatelessWidget {
             ),
           ),
           // botao do google maps
-          IconButton(
-            onPressed: abrirMaps ? onMaps : null,
-            icon: Icon(
-              Icons.public,
-              color: abrirMaps ? Colors.white : Colors.white24,
-              size: 30,
-            ),
-          ),
+          temBotaoGoogleMaps
+              ? IconButton(
+                  onPressed: abrirMaps ? onMaps : null,
+                  icon: Icon(
+                    Icons.public,
+                    color: abrirMaps ? Colors.white : Colors.white24,
+                    size: 30,
+                  ),
+                )
+              : IconButton(
+                  onPressed: null,
+                  icon: const Icon(
+                    Icons.photo_library_outlined,
+                    color: Color.fromRGBO(1, 2, 3, 0),
+                    size: 30,
+                  ),
+                ),
         ],
       ),
     );

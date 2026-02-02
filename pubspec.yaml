@@ -31,12 +31,16 @@ dependencies:
   flutter:
     sdk: flutter
 
+  # CAMERA_OVERLAY
+  camera_overlay:
+    path: camera_overlay
+
   # abrir URLs
   url_launcher: 6.3.2
   google_maps_flutter: ^2.14.0
 
   # Para formata data pt_BR
-  intl: 0.20.2 
+  intl: 0.20.2
 
   # Câmera
   camera: ^0.11.3
