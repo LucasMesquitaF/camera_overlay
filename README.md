@@ -76,5 +76,5 @@ onFotoFinal: (Uint8List? bytes, dynamic localizacao) async {
 ## 📷 Exemplo visual
 Mini-mapa interativo, que permite se movimentar pelo mapa e aplicar zoom. Se aperta e segurar no minimapa ele redefine a posição dele para a sua posição atual.
 
-![Exemplo de uso do Camera Overlay](exemploFoto.jpeg)
+![Exemplo de uso do Camera Overlay](exemploFoto.png)
 
